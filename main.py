@@ -25,22 +25,30 @@ class Robot():
         self.done = False
         self.explore = False
 
-        self.driving_stopflag = False
-        self.driving_thread = threading.Thread(target=self.driving_loop)
+        self.us_l = self.s.us_l
+        self.us_m = self.s.us_m
+        self.us_r = self.s.us_r
+        self.stopflag = False
 
+        self.driving_stopflag = False
+        
+        self.drive_thread = threading.Thread(target=self.driving_loop)
+        
     def stop_driving(self):
         self.driving_stopflag = True
 
     def driving_loop(self):
         self.driving_stopflag = False
         while not self.driving_stopflag:
+            time.sleep(0.01) #god forbid this sleep isnt here and ur code doesnt work
             if self.done:
                 self.stop_driving()
                 self.motor.shutdown()
                 self.s.stop_us()
-                break
+                self.driving_stopflag = True
             elif self.pause_driving:
                 time.sleep(0.05)
+                
             elif self.explore:
                 can_explore = self.m.explore()
                 if not can_explore:
@@ -53,8 +61,6 @@ class Robot():
                 self.pause = True
                 if not can_reach:
                     print("Target not in map!")
-                
-
     
     def user_input(self):
         command = input("Command: ")
@@ -159,13 +165,13 @@ if __name__ == "__main__":
     sense = Sensors(5,6,7,8,23,15,18,16,13,20,19,21,26)
     robot = Robot(sense)
     try:
-        robot.driving_thread.start()
+        robot.drive_thread.start()
+        robot.s.start_us()
         while not robot.done:
-            print(sense.read_us())
-            #robot.user_input()
+            robot.user_input()
     except BaseException as ex:
         print("ending due to exception: %s" % repr(ex))
-    
+
+    robot.s.stop_us()
+    robot.drive_thread.join()
     robot.motor.shutdown()
-    robot.driving_thread.join()
-        
