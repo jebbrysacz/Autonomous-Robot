@@ -38,8 +38,6 @@ class Sensors:
         self.i2c = board.I2C()  # uses board.SCL and board.SDA
         self.mpu = adafruit_mpu6050.MPU6050(self.i2c)
         self.drift = self.calc_drift()
-
-        self.start_us()
     
     def calc_drift(self):
         total = 0
